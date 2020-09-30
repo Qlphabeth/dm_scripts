@@ -9,7 +9,7 @@ def write_row(row, file_type="indicatoren"):
 
     :param row: dictionary passed by reader function.
     :param file_type: the type of file that is being read in.
-            Can be: "indicatoren" or TODO
+            Can be: "indicatoren" or TODO Prob "job" and "internal"
     :return:
     """
 
@@ -27,9 +27,14 @@ def write_row(row, file_type="indicatoren"):
         # If BrinNr does not exist, add school to db, otherwise school must
         # already been added
         if len(results) == 0:
-            # TODO add the school to the db. Else continue.
-            pass
+            # TODO Check if the values in the row.get statements are correct!
+            crsr.execute("INSERT INTO school (brin_nr, `name`, instance_type,"
+                         "address, city, comp_id) VALUES (?, ?, ?, ?, ?)",
+                         (brin_nr, row.get("Naam Instelling"),
+                          row.get("Soort Instelling"), row.get("address"),
+                          row.get("Plaats"), comp_id))
 
+        # Get the data dicts for year, diploma and dropout results
         year_res = row.get("Jaarresultaat")
         dipl_res = row.get("Diplomaresultaat")
         dropout = row.get("Percentage nieuwe VSV-ers")
