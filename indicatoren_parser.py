@@ -48,6 +48,7 @@ def indicatoren_parser(filename):
 
 
 if __name__ == '__main__':
-    data = indicatoren_parser('01-mbo-indicatoren-per-instelling-2019.xls')
+    data = indicatoren_parser(
+        'DATA/01-mbo-indicatoren-per-instelling-2019.xls')
     for row in data:
         print(data[row])
