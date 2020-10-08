@@ -9,9 +9,11 @@ def JOB_parser(filename):
         keys.append(row)
 
     for i in range(len(data.values)):
-        data_dict[i] = {}
+        cur_dict = {}
+        cur_val = data.values[i]
         for j in range(len(data.values[i])):
-            data_dict[i][keys[j]] = data.values[i][j]
+            cur_dict[keys[j]] = cur_val[j]
+        data_dict[i] = cur_dict
     return data_dict
 
 
