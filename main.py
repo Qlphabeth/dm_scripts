@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 from sql_writer import write_data
-from indicatoren_parser import indicatoren_parser
 from sys import argv
 import os
 
@@ -8,7 +8,9 @@ error_dict = {
     0: "Successful",
     1: "File does not exist in path",
     2: "Database does not exist in path",
-    98: "Filetype does not exist. Options: indicatoren or job",
+    3: "File was already added to db",
+    98: "Filetype does not exist. Options: indicatoren or job or "
+        "studentmonitor",
     99: "Usage: main.py filepath type_of_file (database_path)"
 }
 
@@ -29,6 +31,7 @@ def main(argc):
         result_in = write_data(argv[1], file_type=argv[2], db_path=argv[3])
 
     return result_in
+
 
 # Usage: main.py filepath type_of_file (database_path)
 if __name__ == "__main__":
