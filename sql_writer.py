@@ -2,6 +2,8 @@ import sqlite3
 
 from indicatoren_VSV_parser import indicatoren_VSV_parser
 from indicatoren_parser import indicatoren_parser
+from studenten_aantallen_parser import aantallen_parser
+from datetime import datetime
 
 
 def write_data(filename, file_type="indicatoren", db_path="./db/ROCA12.db"):
@@ -10,7 +12,7 @@ def write_data(filename, file_type="indicatoren", db_path="./db/ROCA12.db"):
     :param data: a dictionary of data that has to be added.
     :param db_path: the path to the db.
     :param file_type: the type of file that is being read in.
-            Can be: "indicatoren" or "job
+            Can be: "indicatoren" or "job" or "studentenaantallen"
     :return: integer corresponding to an error message.
     """
 
@@ -154,7 +156,85 @@ def write_data(filename, file_type="indicatoren", db_path="./db/ROCA12.db"):
 
     elif file_type == "job":
         # TODO
-        pass
+        return 97
+
+    elif file_type == "studentenaantallen":
+        data = aantallen_parser(filepath)
+
+        # Check latest studentID in db
+        latest_nr = db.execute("SELECT student_id FROM student "
+                               "ORDER BY student_id DESC LIMIT 1;").fetchall()
+
+        # If no studentIDs, start at 0
+        if len(latest_nr) == 0:
+            latest_nr = [0]
+        latest_nr = latest_nr[0]
+
+        # Loop through dict
+        for years in data:
+            for rows in data[years]:
+                row_dict = data[years][rows]
+
+                # See if the course is already present
+                course = db.execute("SELECT * FROM course WHERE courseID = ? "
+                                    "AND course_level = ? AND team_name = ? "
+                                    "AND locationID = ?;",
+                                    (row_dict.get("Crebo- / elementcode"),
+                                     row_dict.get("Niveau"),
+                                     row_dict.get("Team"),
+                                     row_dict.get("Locatie"))).fetchall()
+
+                # If not, add it
+                if len(course) == 0:
+                    # TODO add domain using the JOB file
+                    db.execute("INSERT INTO course (courseID, course_level, "
+                               "course_name, team_name, "
+                               "locationID) VALUES (?, ?, ?, ?, ?);",
+                               (row_dict.get("Crebo- / elementcode"),
+                                row_dict.get("Niveau"),
+                                row_dict.get("Opleiding"),
+                                row_dict.get("Team"),
+                                row_dict.get("Locatie")))
+
+                # Increment studentID by one
+                latest_nr += 1
+
+                # Enter student into file
+                db.execute("INSERT INTO student (student_id, calender_year,"
+                           "sex, birth_date, age, nationality, learning_path,"
+                           "learning_year, start_date, end_date,"
+                           " planned_end_date, reason_study_end, funded,"
+                           "study_intensity, pre_education, courseID,"
+                           "course_level, team_name, locationID) VALUES "
+                           "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                           "?, ?, ?, ?);",
+                           (latest_nr, years,
+                            row_dict.get("Geslacht"),
+                            str(row_dict.get("Geboortedatum")),
+                            row_dict.get("Leeftijd"),
+                            row_dict.get("Nationaliteit 1"),
+                            row_dict.get("Leerweg"),
+                            row_dict.get("Lj"),
+                            str(row_dict.get("Begindatum")),
+                            str(row_dict.get("Einddatum")),
+                            str(row_dict.get("Geplande einddatum")),
+                            row_dict.get("Reden beëindigen"),
+                            row_dict.get("Bekostigd"),
+                            row_dict.get("Intensiteit"),
+                            row_dict.get("Soort vooropleiding"),
+                            row_dict.get("Crebo- / elementcode"),
+                            row_dict.get("Niveau"),
+                            row_dict.get("Team"),
+                            row_dict.get("Locatie")))
+
+        db.commit()
+        db.close()
+        return 0
 
     else:
         return 98
+
+
+if __name__ == '__main__':
+    testpath = "studentaantallen_geanonimiseerd_wur.xlsx"
+    write_data(testpath, "studentenaantallen")
